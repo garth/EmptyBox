@@ -1,10 +1,12 @@
 # Testing Cerebral Apps
 
-Tests specific to cerebral apps fall into two categories, _Action Tests_ and _Signal Tests_. Other test categories (e.g. System Level) should be able to be done in the same way as any other web applications and are not covered here.
+Tests specific to cerebral apps fall into two categories, _Action Tests_ and _Signal Tests_. Other test categories (e.g. System Level) can be done in the same way as any other web application and are not covered here.
+
+The example code shown here is using Mocha and Chai, but should be easy to modify for your pereferred testing framework.
 
 ## Action Tests
 
-Both synchronous and asynchronous actions in cerebral should be pure functions, all data and services used by the function are passed as parameters to the action. The only difference with asynchronous actions is that the output methods not be called immediately, but most test JavaScript frameworks can deal with this case.
+Both synchronous and asynchronous actions in cerebral should be pure functions, all data and services used by the action are passed as parameters to the function. The only difference with asynchronous actions is that the output methods may not be called immediately, but most test JavaScript frameworks can deal with this case.
 
 All cerebral actions have the following signature:
 
@@ -14,7 +16,7 @@ function actionName (input, state, output, services) {
 }
 ```
 
-Cerebral encourages you to put your actions into individual files. Exporting actions from module allows them to be reused by many signals an also allows actions to be easily tested.
+Cerebral encourages you to put your actions into individual files. Exporting actions from modules allows them to be reused by many signals and also allows actions to be easily tested.
 
 ### Synchronous Action Tests
 
@@ -26,7 +28,7 @@ export default function toggleIsLoading(input, state) {
 }
 ```
 
-In this case we don't need to use `output` or `services` so these parameters not declared. We expect that the `input` will have a `value` property set to either `true` or `false` which will then be set on the cerebral model via the given `state` object. So to test this we simply need to mock the `state` object and pass in the `input` data to the action. Because our `state` object is mocked there is no central state to test, so we going to put our asserts inside the mock `set` method instead.
+In this case we don't need to use `output` or `services` so these parameters not declared. We expect that the `input` will have a `value` property set to either `true` or `false` which will then be set on the cerebral controller state via the given `state` object. So to test this we simply need to mock the `state` object and pass in the `input` data to the action. Because our `state` object is mocked there is no central state to test, so we're going to put our asserts inside the mock `set` method instead.
 
 ```javascript
 // Ideally your assertion library should support counting the number of assertions made,
@@ -40,7 +42,7 @@ afterEach(counter.check);
 
 describe('toggleIsLoading()', function () {
 
-  it('should change the isLoading flag in the central state', function () {
+  it('should set the isLoading flag on the state', function () {
     // we expect two asserts to be called, if no asserts are made then the test should fail
     expectCount(2);
 
@@ -77,7 +79,7 @@ afterEach(counter.check);
 
 describe('someAsyncAction()', function () {
 
-  it('should change the isLoading flag in the central state', function (done) {
+  it('should call an output method when done', function (done) {
     expectCount(1);
 
     const input = {};
@@ -109,7 +111,7 @@ Signal tests are higher level test than action tests and require a little setup 
 
 ### Patch the controller
 
-By default cerebral does not expose the controller state for direct manipulation, which is correct (state changes are managed by cerebral). But for testing we need to bypass this. In your cerebral controller you can add the following:
+By default cerebral does not expose the controller state for direct manipulation which is correct (state changes are managed by cerebral). But for testing we need to bypass this. In your cerebral controller you can add the following:
 
 ```javascript
 import Controller from 'cerebral';
@@ -126,7 +128,7 @@ let model = Model(state);
 let controller = Controller(model, services);
 
 // only when testing - expose the model on the controller
-// webpack will make process.env.NODE_ENV available.
+// (webpack will make process.env.NODE_ENV available).
 if (process.env.NODE_ENV === 'test') {
   // DON'T DO THIS IN PRODUCTION
   controller.model = model;
@@ -150,7 +152,7 @@ NODE_ENV=test mocha --compilers js:babel-core/register
 
 ### Signal Promise Wrapper
 
-Since we are going to be calling signals directly and our tests need to know when the signal has finished, it can be useful to wrap a signal in a `Promise`. Here is a sample helper that wraps a signal in a promise and also executes a test function when done.
+Since we are going to be calling signals directly and our tests need to know when the signal has finished, it can be useful to wrap a signal in a `Promise`. Here is a sample helper that wraps a signal in a promise and also executes a test function when the signal is done.
 
 ```javascript
 // helper function to wrap a signal in a promise and optionally run a test when the signal is done
