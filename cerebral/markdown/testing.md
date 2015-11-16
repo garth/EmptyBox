@@ -2,7 +2,7 @@
 
 Tests specific to cerebral apps fall into two categories, _Action Tests_ and _Signal Tests_. Other test categories (e.g. System Level) can be done in the same way as any other web application and are not covered here.
 
-The example code shown here is using Mocha and Chai, but should be easy to modify for your pereferred testing framework.
+The example code shown here is using Mocha and Chai, but should be easy to modify for your preferred testing framework.
 
 ## Action Tests
 
